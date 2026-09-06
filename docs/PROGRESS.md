@@ -12,7 +12,7 @@ Two things in this doc:
 
 Each phase = one chat. Finish a phase, commit your code, then start a new chat for the next one so context stays fast and clean.
 
-### Phase 0 — Environment & Foundations
+### Phase 0 — Environment & Foundations (DONE)
 **Goal:** Get Windows dev environment ready before writing app code.
 - Install Node.js (LTS), Git, VS Code + extensions (ESLint, Prettier, PostgreSQL).
 - Create GitHub repo (monorepo: `/frontend`, `/backend` folders).
