@@ -25,12 +25,13 @@ Each phase = one chat. Finish a phase, commit your code, then start a new chat f
 - Basic Express app, `.env` handling, folder structure (routes/controllers/etc.) and *why* that structure exists.
 - Learn: how TS compiles to JS, what a minimal backend architecture looks like.
 
-### Phase 2 — Database Setup (Neon + raw SQL)
+### Phase 2 — Database Setup (Neon + raw SQL) (DONE)
 **Goal:** Backend can talk to Postgres.
 - Create Neon project, get connection string.
 - `pg` library setup, connection pooling basics.
 - Write raw SQL migration for `users` table.
 - Learn: what a connection pool is, basic SQL DDL, why migrations matter.
+*Note:* I am using manual migrations (paste into Neon SQL editor) for now.
 
 ### Phase 3 — Auth Integration (Clerk)
 **Goal:** Users can sign up/sign in; frontend and backend both know who's logged in.
