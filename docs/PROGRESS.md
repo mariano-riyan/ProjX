@@ -19,7 +19,7 @@ Each phase = one chat. Finish a phase, commit your code, then start a new chat f
 - Sign up for Neon, Clerk, Vercel, Render accounts (no config yet, just accounts).
 - Learn: what Git/GitHub actually do, why monorepo vs separate repos matters.
 
-### Phase 1 — Backend Skeleton (Express + TypeScript)
+### Phase 1 — Backend Skeleton (Express + TypeScript) (DONE)
 **Goal:** A running Express server in TypeScript with one health-check route.
 - Init `/backend`, TypeScript config, `tsconfig.json` explained line-by-line (briefly).
 - Basic Express app, `.env` handling, folder structure (routes/controllers/etc.) and *why* that structure exists.
