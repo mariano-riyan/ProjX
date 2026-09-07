@@ -12,14 +12,14 @@ Two things in this doc:
 
 Each phase = one chat. Finish a phase, commit your code, then start a new chat for the next one so context stays fast and clean.
 
-### Phase 0 — Environment & Foundations
+### Phase 0 — Environment & Foundations (DONE)
 **Goal:** Get Windows dev environment ready before writing app code.
 - Install Node.js (LTS), Git, VS Code + extensions (ESLint, Prettier, PostgreSQL).
 - Create GitHub repo (monorepo: `/frontend`, `/backend` folders).
 - Sign up for Neon, Clerk, Vercel, Render accounts (no config yet, just accounts).
 - Learn: what Git/GitHub actually do, why monorepo vs separate repos matters.
 
-### Phase 1 — Backend Skeleton (Express + TypeScript)
+### Phase 1 — Backend Skeleton (Express + TypeScript) (DONE)
 **Goal:** A running Express server in TypeScript with one health-check route.
 - Init `/backend`, TypeScript config, `tsconfig.json` explained line-by-line (briefly).
 - Basic Express app, `.env` handling, folder structure (routes/controllers/etc.) and *why* that structure exists.
