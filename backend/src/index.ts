@@ -1,15 +1,19 @@
-import express from 'express';
+import { clerkMiddleware } from '@clerk/express';
 import dotenv from 'dotenv';
-import { pool } from "./db/pool.js";
+import express from 'express';
+
+import healthRoutes from './routes/health.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get("/health", (req, res) => {
-    res.json({ status: "ok" })
-});
+app.use(clerkMiddleware())
+
+app.use('/health', healthRoutes)
+app.use('/', userRoutes)
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

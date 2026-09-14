@@ -33,12 +33,24 @@ Each phase = one chat. Finish a phase, commit your code, then start a new chat f
 - Learn: what a connection pool is, basic SQL DDL, why migrations matter.
 *Note:* I am using manual migrations (paste into Neon SQL editor) for now.
 
-### Phase 3 — Auth Integration (Clerk)
-**Goal:** Users can sign up/sign in; frontend and backend both know who's logged in.
-- Scaffold `/frontend` with Vite + React + Tailwind + shadcn/ui.
-- Clerk frontend integration (sign-up/sign-in UI).
-- Backend JWT verification middleware; sync Clerk user → `users` table on first login.
-- Learn: how token-based auth works, frontend/backend auth handshake.
+### Phase 3 — Auth Integration (Clerk) (DONE)
+- Frontend: Vite+React+TS scaffolded, Tailwind + shadcn/ui added, Clerk integrated
+  (ClerkProvider in main.tsx, SignedIn/SignedOut/SignInButton/UserButton in App.tsx).
+- Backend: @clerk/express installed, clerkMiddleware() global, getAuth() used
+  per-route (requireAuth() is deprecated — avoid it).
+- /me route: verifies session, fetches full Clerk user via clerkClient.users.getUser(),
+  upserts into `users` table on clerk_id (ON CONFLICT DO UPDATE).
+- Key learning: TS `emailAddresses[0]` needs optional chaining + null check.
+- Key learning: `verbatimModuleSyntax` requires `import type` for type-only imports
+  (e.g. Express's Request/Response).
+
+### Post-Phase 3 cleanup (DONE)
+- Refactored backend from single index.ts into routes/ + controllers/ + db/ structure.
+  index.ts now just wires middleware + routers together.
+- Decision: SQL queries currently live inline inside controllers (not yet split into
+  db/queries/). Revisit this in Phase 4 — once multiple routes need the same query
+  (e.g. project lookups used by both CRUD and public profile), extract shared queries
+  into db/queries/ to avoid duplication.
 
 ### Phase 4 — Projects Backend (CRUD API)
 **Goal:** Full REST API for projects.
