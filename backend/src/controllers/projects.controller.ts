@@ -6,11 +6,31 @@ export async function createProject(req: Request, res: Response) {
   const { userId: clerkId } = getAuth(req);
   if (!clerkId) return res.status(401).json({ error: "Unauthorized" });
 
+  if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+    return res.status(400).json({ error: "Invalid request body" });
+  }
+
   const {
     title, short_description, long_description,
     github_url, live_demo_url, screenshots,
     reflection, visibility, featured, skills, // skills: string[] from request body
   } = req.body;
+
+  if (
+    skills !== undefined &&
+    (!Array.isArray(skills) ||
+      !skills.every((name) => typeof name === "string"))
+  ) {
+    return res.status(400).json({ error: "Skills must be an array of strings" });
+  }
+
+  if (
+    screenshots !== undefined &&
+    (!Array.isArray(screenshots) ||
+      !screenshots.every((url) => typeof url === "string"))
+  ) {
+    return res.status(400).json({ error: "Screenshots must be an array of strings" });
+  }
 
   if (!title) return res.status(400).json({ error: "Title is required" });
 
@@ -69,7 +89,7 @@ export async function createProject(req: Request, res: Response) {
 export async function listProjects(req: Request, res: Response) {
     try {
         const { userId: clerkId } = getAuth(req);
-        if (!clerkId) return res.status(404).json({ error: "Unauthorized" });
+        if (!clerkId) return res.status(401).json({ error: "Unauthorized" });
 
         const userResult = await pool.query(
             "SELECT id FROM users WHERE clerk_id = $1", [clerkId]
@@ -128,7 +148,11 @@ export async function updateProject(req: Request, res: Response) {
       return res.status(403).json({ error: "Forbidden" }); // exists, but doesn't belong to you
     }
 
-        const {
+    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+      return res.status(400).json({ error: "Invalid request body" });
+    }
+
+    const {
       title, short_description, long_description,
       github_url, live_demo_url, screenshots,
       reflection, visibility, featured,
