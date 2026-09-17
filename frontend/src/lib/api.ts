@@ -22,6 +22,8 @@ export function useApi() {
       throw new Error(`API error: ${res.status}`);
     }
 
+    if (res.status === 204) return null;
+
     return res.json();
   }
 

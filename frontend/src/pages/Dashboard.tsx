@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useApi } from '../lib/api'
 import { Link } from 'react-router-dom'
 
@@ -15,9 +15,19 @@ interface Project {
 export default function Dashboard() {
   const { fetchApi } = useApi()
 
+  const queryClient = useQueryClient()
+
   const { data: projects, isLoading, error } = useQuery<Project[]>({
     queryKey: ['projects'],       // cache key — React Query stores results under this
     queryFn: () => fetchApi('/api/projects'),
+  })
+
+  const deleteProject = useMutation({
+    mutationFn: (id: number) =>
+      fetchApi(`/api/projects/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+    },
   })
 
   if (isLoading) return <div>Loading projects...</div>
@@ -35,6 +45,7 @@ export default function Dashboard() {
         {projects?.map((p) => (
           <li key={p.id}>
             <strong>{p.title}</strong> — {p.skills.join(', ')}
+            <button onClick={() => deleteProject.mutate(p.id)}>Delete</button>
           </li>
         ))}
       </ul>
