@@ -25,6 +25,7 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/dashboard/new" element={<NewProject/>} />
+      <Route path="/dashboard/edit/:id" element={<NewProject />} />
     </Routes>
   )
 }

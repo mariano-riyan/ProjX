@@ -45,6 +45,7 @@ export default function Dashboard() {
         {projects?.map((p) => (
           <li key={p.id}>
             <strong>{p.title}</strong> — {p.skills.join(', ')}
+            <Link to={`/dashboard/edit/${p.id}`}>Edit</Link>
             <button onClick={() => deleteProject.mutate(p.id)}>Delete</button>
           </li>
         ))}
