@@ -52,17 +52,65 @@ Each phase = one chat. Finish a phase, commit your code, then start a new chat f
   (e.g. project lookups used by both CRUD and public profile), extract shared queries
   into db/queries/ to avoid duplication.
 
-### Phase 4 — Projects Backend (CRUD API)
+### Phase 4 — Projects Backend (CRUD API) (DONE)
 **Goal:** Full REST API for projects.
-- Raw SQL for `projects`, `skills`, `project_skills` tables.
-- Express routes: create/read/update/delete, protected by auth middleware.
-- Learn: REST conventions, many-to-many relationships in SQL.
+- Migration `backend/src/db/migrations/002_create_projects.sql` — three tables:
+  - `projects` (owned by `user_id`, `visibility` check constraint, `screenshots` as `TEXT[]`).
+  - `skills` — **per-user** model (`user_id` + `name`, `UNIQUE (user_id, name)`) — each
+    user owns their own skill rows rather than sharing a global skills table.
+  - `project_skills` — join table, composite PK `(project_id, skill_id)`, `ON DELETE CASCADE`
+    on both FKs so deleting a project or skill cleans up links automatically.
+- Naming convention: `projects.routes.ts` / `projects.controller.ts` (matches `user.routes.ts` pattern).
+- `POST /api/projects` (createProject) — uses `pool.connect()` + `BEGIN/COMMIT/ROLLBACK`
+  because it's a multi-step write (insert project → upsert each skill via
+  `ON CONFLICT (user_id, name) DO UPDATE ... RETURNING id` → link in `project_skills`).
+  All steps commit together or roll back together.
+- `GET /api/projects` (listProjects) — uses plain `pool.query()` (single read, no
+  transaction needed). Returns each project with a `skills: string[]` field via
+  `LEFT JOIN project_skills/skills` + `json_agg(...) FILTER (...)` + `GROUP BY p.id`.
+- `PATCH /api/projects/:id` (updateProject) — ownership check (404 if project doesn't
+  exist, 403 if it exists but isn't the caller's) before editing. Partial update via
+  `COALESCE(new_value, existing_value)` per field so omitted fields aren't overwritten
+  with null. Does **not** yet support editing a project's skills (stretch item, not done).
+- `DELETE /api/projects/:id` (deleteProject) — same ownership check, then
+  `DELETE FROM projects WHERE id = $1`, responds `204 No Content`. Relies on
+  `ON DELETE CASCADE` to clean up `project_skills` rows.
+- All four routes tested end-to-end via Postman (Clerk session token from
+  `await window.Clerk.session.getToken()` in browser console — token expires fast,
+  ~60s, so grab it right before sending each request).
+- Key learning: `pool.query()` vs `pool.connect()` — query() borrows a connection for
+  one statement; connect() holds one dedicated connection across multiple statements,
+  required for BEGIN/COMMIT to apply to the same session.
+- Key learning: 404 vs 403 — don't collapse "doesn't exist" and "exists but not yours"
+  into one response.
+- **Known gap / carried forward:** the "resolve internal `userId` from Clerk `clerk_id`"
+  block is now duplicated across `/me`, create, list, update, delete (5 places). Extract
+  into a shared helper (e.g. `db/queries/users.ts` or a small auth-lookup util) — good
+  candidate for the `db/queries/` refactor already flagged after Phase 3.
+- **Known gap:** updating a project's skills (add/remove tags via PATCH) not implemented —
+  left as a stretch item, can revisit in Phase 5 when building the edit form.
 
-### Phase 5 — Projects Frontend
+### Phase 5 — Projects Frontend (DONE)
 **Goal:** Dashboard where a user manages their projects.
-- Create/edit/delete project forms, dashboard list with filters (skill/visibility/featured).
-- Connect to backend API (fetch/axios + React Query or plain fetch — your call in that chat).
-- Learn: forms + state in React, calling a REST API from the frontend.
+- Providers wired in `main.tsx`: `ClerkProvider` > `QueryClientProvider` > `BrowserRouter`.
+- `frontend/src/lib/api.ts` — `useApi()` hook wraps `fetch`, attaches Clerk token via
+  `getToken()`, throws on non-2xx, returns `null` on `204` (needed for DELETE responses).
+- Backend CORS was missing — added `cors` package, configured via `FRONTEND_URL` env var,
+  restricted to Vite dev origin.
+- Routes: `/` (public, sign-in), `/dashboard` (project list), `/dashboard/new` (create),
+  `/dashboard/edit/:id` (edit) — create and edit share one component (`NewProject.tsx`).
+- `NewProject.tsx` — single `formData` object (not per-field `useState`) since edit mode
+  hydrates all fields at once from a `useQuery` fetch (`GET /api/projects/:id`) inside a
+  `useEffect`. `isEditMode = Boolean(id)` (from `useParams`) decides POST vs PATCH in the
+  save mutation.
+- Dashboard: `useQuery` lists projects, `useMutation` handles delete (with cache
+  invalidation via `queryClient.invalidateQueries({ queryKey: ['projects'] })`).
+- Filters (skill text match, visibility, featured-only) implemented client-side as a
+  derived `filteredProjects` array — no backend query params yet.
+- **Known gap:** `<h1>Add Project</h1>` is hardcoded — doesn't reflect edit mode.
+- **Known gap:** unclear whether `updateProject` PATCH controller accepts/updates a
+  project's `skills` array (flagged as not implemented in Phase 4 notes) — worth
+  verifying in Phase 6 or later if skill edits don't seem to persist.
 
 ### Phase 6 — Public Profile
 **Goal:** A shareable, no-login-required profile page.
