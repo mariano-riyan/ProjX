@@ -34,10 +34,14 @@ export default function NewProject() {
 		skills: [],
 	})
 
-	const { data: existingProject } = useQuery({
+	const {
+		data: existingProject,
+		isLoading: isProjectLoading,
+		error: projectError,
+	} = useQuery({
 		queryKey: ['projects', id],
 		queryFn: () => fetchApi(`/api/projects/${id}`),
-		enabled: isEditMode,            // only runs this query when we're actually editing
+		enabled: isEditMode,
 	})
 
 	
@@ -84,7 +88,7 @@ export default function NewProject() {
 			long_description: null,         // not built yet — explicit null, not undefined
 			github_url: formData.githubUrl,
 			live_demo_url: formData.liveUrl,
-			screenshots: [],
+			screenshots: isEditMode ? undefined : [],
 			reflection: null,
 			visibility: formData.visibility,
 			featured: formData.featured,
@@ -92,6 +96,8 @@ export default function NewProject() {
 		})
 	}
 
+	if (isEditMode && isProjectLoading) return <div>Loading project...</div>
+	if (isEditMode && projectError) return <div>Error: {(projectError as Error).message}</div>
 
 	return (
 		<div>
