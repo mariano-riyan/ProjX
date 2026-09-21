@@ -222,3 +222,45 @@ export async function deleteProject(req: Request, res: Response) {
     res.status(500).json({ error: "Failed to delete project" });
   }
 }
+
+export async function getProject(req: Request, res: Response) {
+  try {
+    const { userId: clerkId } = getAuth(req);
+    if (!clerkId) return res.status(401).json({ error: "Unauthorized" });
+
+    const userResult = await pool.query(
+      "SELECT id FROM users WHERE clerk_id = $1",
+      [clerkId]
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const userId = userResult.rows[0].id;
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `SELECT p.*,
+          COALESCE(json_agg(s.name) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills
+       FROM projects p
+       LEFT JOIN project_skills ps ON ps.project_id = p.id
+       LEFT JOIN skills s ON s.id = ps.skill_id
+       WHERE p.id = $1
+       GROUP BY p.id`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    const project = result.rows[0];
+    if (project.user_id !== userId) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    res.json(project);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch project" });
+  }
+}
