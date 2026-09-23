@@ -1,11 +1,12 @@
 import { clerkMiddleware } from '@clerk/express';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import cors from 'cors';
 
 import healthRoutes from './routes/health.routes.js';
+import projectsRoutes from './routes/projects.routes.js';
 import userRoutes from './routes/user.routes.js';
-import projectsRoutes from './routes/projects.routes.js'
+import publicProfileRoutes from './routes/publicProfile.routes.js'
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(clerkMiddleware())
 app.use('/health', healthRoutes)
 app.use('/', userRoutes)
 app.use('/api/projects', projectsRoutes)
+app.use('/public-profile', publicProfileRoutes)
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
