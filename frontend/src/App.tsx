@@ -3,6 +3,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-reac
 
 import Dashboard from './pages/Dashboard'
 import NewProject from './pages/NewProject'
+import PublicProfile from './pages/PublicProfile'
 
 function Home() {
   return (
@@ -57,6 +58,10 @@ function App() {
             <NewProject />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/u/:username"
+        element={<PublicProfile />}
       />
     </Routes>
   )

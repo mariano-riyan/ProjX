@@ -112,11 +112,19 @@ Each phase = one chat. Finish a phase, commit your code, then start a new chat f
   project's `skills` array (flagged as not implemented in Phase 4 notes) — worth
   verifying in Phase 6 or later if skill edits don't seem to persist.
 
-### Phase 6 — Public Profile
+### Phase 6 — Public Profile (DONE)
 **Goal:** A shareable, no-login-required profile page.
-- Backend `GET /public-profile/:username` endpoint.
-- Frontend public profile page: info, featured project, public projects grid, skills overview.
-- Learn: public vs protected routes, designing an API for external consumption.
+- Backend: `GET /public-profile/:username` — see previous entry, unchanged.
+- Frontend: `frontend/src/pages/PublicProfile.tsx`, route `/u/:username` in `App.tsx`, deliberately outside `ProtectedRoute`.
+  - Plain `fetch` (not `useApi()`) — this page must work with no Clerk session.
+  - `useQuery<Profile>` keyed by `[username]`, typed to match the actual backend response shape (one profile object with a nested `projects: Project[]`, not an array of projects).
+  - Featured project found via `.find(p => p.featured)`; rest of public projects via `.filter(p => !p.featured)`.
+  - Skills overview: de-duplicated across all projects via `.flatMap()` + `new Set()`.
+- Tested end-to-end: valid username, 404 on unknown username, empty-fields case, and featured+skills case.
+- Learnings: `.find()` vs `.filter()` vs `.flatMap()` — picking the array method based on the shape you actually need back.
+
+## Known bugs / gaps
+- **No screenshot upload field in `NewProject.tsx`.** The `projects.screenshots` column (`TEXT[]`) exists in the DB, and `PublicProfile.tsx` already renders `featuredProject?.screenshots` correctly — but the create/edit project form has no input for adding screenshot URLs, so this can't currently be populated or tested through the UI. Fix in a future phase: add a screenshots input (start simple — a single URL text field, or a repeatable "add URL" list) to `NewProject.tsx`.
 
 ### Phase 7 — Polish, Deploy, Document
 **Goal:** Live app + README.
