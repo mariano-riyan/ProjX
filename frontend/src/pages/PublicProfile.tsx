@@ -48,7 +48,7 @@ export default function PublicProfile() {
     if (profile === undefined) return null
 
     const featuredProject = profile.projects.find((project) => project.featured === true);
-    const otherProjects = profile.projects.filter((project) => !project.featured);
+    const otherProjects = profile.projects.filter((project) => project.id !== featuredProject?.id);
 
     const skills = profile.projects.flatMap((project) => project.skills);
     const uniqueSkills = [...new Set(skills)];
