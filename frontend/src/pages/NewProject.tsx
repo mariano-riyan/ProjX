@@ -12,6 +12,7 @@ interface FormData {
   visibility: string
   featured: boolean
   skills: string[]
+  screenshots: string[]
 }
 
 export default function NewProject() {
@@ -22,7 +23,8 @@ export default function NewProject() {
 	const { id } = useParams()
 	const isEditMode = Boolean(id)
 
-	const [skillInput, setSkillInput] = useState('')
+	const [skillInput, setSkillInput] = useState('');
+	const [screenshotInput, setScreenshotInput] = useState('');
 
 	const [formData, setFormData] = useState<FormData>({
 		title: '',
@@ -32,6 +34,7 @@ export default function NewProject() {
 		visibility: 'public',
 		featured: false,
 		skills: [],
+		screenshots: []
 	})
 
 	const {
@@ -58,6 +61,7 @@ export default function NewProject() {
 			visibility: existingProject.visibility,
 			featured: existingProject.featured,
 			skills: existingProject.skills ?? [],
+			screenshots: existingProject.screenshot ?? []
 			})
 		}
 		
@@ -88,7 +92,7 @@ export default function NewProject() {
 			long_description: null,         // not built yet — explicit null, not undefined
 			github_url: formData.githubUrl,
 			live_demo_url: formData.liveUrl,
-			screenshots: isEditMode ? undefined : [],
+			screenshots: formData.screenshots,
 			reflection: null,
 			visibility: formData.visibility,
 			featured: formData.featured,
@@ -101,7 +105,7 @@ export default function NewProject() {
 
 	return (
 		<div>
-		<h1>Add Project</h1>
+		<h1>{isEditMode ? 'Edit Project' : 'Add Project'}</h1>
 		<form onSubmit={handleSubmit}>
 			<div>
 			<label>Title</label>
@@ -189,6 +193,49 @@ export default function NewProject() {
 					))}
 				</ul>
 			</div>
+
+			<div>
+				<label>Screenshot URLs</label>
+				<input
+					type="text"
+					value={screenshotInput}
+					onChange={(e) => setScreenshotInput(e.target.value)}
+					placeholder="https://..."
+				/>
+				<button
+					type="button"
+					onClick={() => {
+						const url = screenshotInput.trim()
+						if (url === '') return
+						try {
+							new URL(url) // throws if the string isn't a valid URL
+						} catch {
+							return
+						}
+						setFormData({ ...formData, screenshots: [...formData.screenshots, url] })
+						setScreenshotInput('')
+					}}
+				>
+					Add
+				</button>
+				<ul>
+					{formData.screenshots.map((url, i) => (
+						<li key={i}>
+							{url}{' '}
+							<button
+								type="button"
+								onClick={() => setFormData({
+									...formData,
+									screenshots: formData.screenshots.filter((_, idx) => idx !== i)
+								})}
+							>
+								remove
+							</button>
+						</li>
+					))}
+				</ul>
+			</div>
+
 			<button type="submit" disabled={saveProject.isPending}>
 				{saveProject.isPending ? 'Saving...' : 'Save Project'}
 			</button>
