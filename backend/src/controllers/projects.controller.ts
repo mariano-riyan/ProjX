@@ -28,6 +28,7 @@ if (
 
 if (
 	screenshots !== undefined &&
+	screenshots !== null &&
 	(!Array.isArray(screenshots) ||
 	!screenshots.every((url) => typeof url === "string"))
 ) {

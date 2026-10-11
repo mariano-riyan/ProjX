@@ -61,7 +61,7 @@ export default function NewProject() {
 			visibility: existingProject.visibility,
 			featured: existingProject.featured,
 			skills: existingProject.skills ?? [],
-			screenshots: existingProject.screenshot ?? []
+			screenshots: existingProject.screenshots ?? []
 			})
 		}
 		
@@ -207,11 +207,16 @@ export default function NewProject() {
 					onClick={() => {
 						const url = screenshotInput.trim()
 						if (url === '') return
+
+						let parsed: URL // declared outside the try so it's still in scope after it
+
 						try {
-							new URL(url) // throws if the string isn't a valid URL
+							parsed = new URL(url) // throws if the string isn't a valid URL
 						} catch {
 							return
 						}
+						
+						if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return
 						setFormData({ ...formData, screenshots: [...formData.screenshots, url] })
 						setScreenshotInput('')
 					}}
