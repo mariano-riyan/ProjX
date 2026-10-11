@@ -23,9 +23,16 @@ export default function Dashboard() {
 	const [visibilityFilter, setVisibilityFilter] = useState('all')
 	const [featuredOnly, setFeaturedOnly] = useState(false)
 
+	// Ensures our DB has a row for this Clerk user (your /me route upserts it)
+	const meQuery = useQuery({
+		queryKey: ['me'],
+		queryFn: () => fetchApi('/me'),
+	})
+
 	const { data: projects, isLoading, error } = useQuery<Project[]>({
-		queryKey: ['projects'],       // cache key — React Query stores results under this
+		queryKey: ['projects'],
 		queryFn: () => fetchApi('/api/projects'),
+		enabled: meQuery.isSuccess, // `enabled`: React Query holds the query until this is true
 	})
 
 	const deleteProject = useMutation({
@@ -49,8 +56,8 @@ export default function Dashboard() {
 	return matchesSkill && matchesVisibility && matchesFeatured
 	})
 
-	if (isLoading) return <div>Loading projects...</div>
-	if (error) return <div>Error: {(error as Error).message}</div>
+	if (meQuery.isLoading || isLoading) return <div>Loading projects...</div>
+	if (meQuery.error || error) return <div>Error: {((meQuery.error || error) as Error).message}</div>
 
 	return (
 		<div>
