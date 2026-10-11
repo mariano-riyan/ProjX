@@ -123,8 +123,18 @@ Each phase = one chat. Finish a phase, commit your code, then start a new chat f
 - Tested end-to-end: valid username, 404 on unknown username, empty-fields case, and featured+skills case.
 - Learnings: `.find()` vs `.filter()` vs `.flatMap()` — picking the array method based on the shape you actually need back.
 
-## Known bugs / gaps
-- **No screenshot upload field in `NewProject.tsx`.** The `projects.screenshots` column (`TEXT[]`) exists in the DB, and `PublicProfile.tsx` already renders `featuredProject?.screenshots` correctly — but the create/edit project form has no input for adding screenshot URLs, so this can't currently be populated or tested through the UI. Fix in a future phase: add a screenshots input (start simple — a single URL text field, or a repeatable "add URL" list) to `NewProject.tsx`.
+### Pre-Phase 7 cleanup (DONE)
+- Extracted `getUserIdFromClerkId(db: Queryable, clerkId)` into `backend/src/db/queries/users.ts`.
+  Takes `Pool | PoolClient`, returns `number | null`; callers choose the status code.
+  Used in all 5 project controllers (create, list, get, update, delete).
+- Rule learned: run every early-exit check (auth, validation, user lookup) BEFORE
+  `pool.connect()` / `BEGIN`, so a `return` can never leave a transaction open.
+- `PATCH /api/projects/:id` now supports `skills`: omitted = unchanged, array = full
+  replace (`DELETE FROM project_skills` + re-upsert loop), `[]` clears all tags. Runs in a
+  transaction with the project UPDATE; inner catch rolls back and rethrows to the outer 500 handler.
+- `NewProject.tsx`: heading reflects edit mode; added `screenshots: string[]` to `formData`
+  with an add/remove URL list (validated with `new URL()`); submit now always sends the real list.
+- No known gaps remaining.
 
 ### Phase 7 — Polish, Deploy, Document
 **Goal:** Live app + README.
