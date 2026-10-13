@@ -136,12 +136,60 @@ Each phase = one chat. Finish a phase, commit your code, then start a new chat f
   with an add/remove URL list (validated with `new URL()`); submit now always sends the real list.
 - No known gaps remaining.
 
-### Phase 7 — Polish, Deploy, Document
+### Phase 7 — Polish, Deploy, Document (DONE)
 **Goal:** Live app + README.
-- Deploy backend to Render, frontend to Vercel, connect prod Neon DB.
-- End-to-end test of the full flow.
-- Write README (what/features/stack/local setup/deploy steps).
-- Learn: environment variables in production, CORS in the wild, deployment basics.
+- Backend: added `build` (`tsc`) and `start` (`node dist/index.js`) scripts to `backend/package.json`.
+  Render reads `PORT` from env; CORS origin comes from `FRONTEND_URL`.
+- Prod DB: separate Neon project (not a branch of dev), migrations run manually in order
+  (users, then `002_create_projects.sql`). Dev `.env` still points at the dev DB; the prod
+  connection string lives only in Render env vars.
+- Render (Web Service): Root Directory `backend`, build `npm install && npm run build`,
+  start `npm start`. Env: `DATABASE_URL`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `FRONTEND_URL`.
+  Free tier sleeps after ~15 min idle (first request ~50s).
+- Vercel: Root Directory `frontend`, `frontend/vercel.json` rewrites all paths to `/index.html`
+  so React Router routes survive a refresh. Env: `VITE_API_URL` (no trailing slash) + Clerk
+  publishable key.
+- Live: frontend `https://proj-x-five.vercel.app`, backend `https://projx-d8ch.onrender.com`.
+- Clerk: dev keys on both sides (prod Clerk instances need a custom domain). Keys must come
+  from the same Clerk instance or every request 401s.
+- Bug found in prod: the fresh prod DB had no `users` row, so project routes returned 404
+  (`getUserIdFromClerkId` returned null). Fix: `Dashboard.tsx` now calls `GET /me` first
+  (`meQuery`), and the projects query uses `enabled: meQuery.isSuccess`.
+  Idea for later: move this sync into `ProtectedRoute` so every protected page gets it
+  (e.g. landing directly on `/dashboard/edit/:id`).
+- Full end-to-end test passed on the live site (auth, CRUD, skills edit, public profile, refresh on `/u/:username`).
+- README written and merged.
+- Key learnings:
+  - Vite env vars (`VITE_*`) are baked in at build time; changing one needs a redeploy.
+  - CORS compares origins as exact strings (no trailing slash). Vercel per-deploy URLs
+    differ from the production alias, so test on the alias only.
+  - A committed `frontend/.env` can override Vercel env vars at build time.
+
+### Pre-Phase 8: CI/CD with GitHub Actions (IN PROGRESS — continue in a new chat)
+**Goal:** Build, lint, and deploy automatically so Phase 8 UI work needs no manual steps.
+**Decisions already made:**
+- Repo is public (Actions minutes are free); local Node is v24.19.0, CI uses Node 24.
+- Option B: GitHub Actions controls deploys. After CI passes on `main`, Actions triggers
+  Render via a deploy hook and Vercel via the Vercel CLI. Render and Vercel auto-deploy
+  from Git will be turned off so nothing deploys twice or skips CI.
+- CI runs on every pull request AND on pushes to `main`.
+- Checks: frontend `npm run lint` + `npm run build`; backend `npm run build` only (no ESLint
+  in backend yet, optional later). The builds already run `tsc`, so type-checking is covered.
+**Plan (one task at a time):**
+1. Create `.github/workflows/ci.yml` (two parallel jobs, `working-directory` for the monorepo,
+   `npm ci`, npm cache). Before starting: confirm `package-lock.json` is committed in BOTH
+   `frontend/` and `backend/`, and that `npm run lint` passes locally in `frontend/`.
+   Work on branch `ci-pipeline`, open a PR, confirm both jobs go green.
+2. Turn off auto-deploy: Render (Settings, Auto-Deploy off) and Vercel (disconnect Git
+   deploys, or an ignored-build-step rule).
+3. Add deploy jobs that `needs:` the CI jobs and run only on `push` to `main`:
+   - Render: deploy hook URL stored as a GitHub secret, called with `curl`.
+   - Vercel: `vercel` CLI with secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+     (note: Vercel Root Directory is `frontend`).
+4. Verify: push a trivial change to `main`, watch CI then deploy, confirm the live site updates.
+   Optionally add branch protection requiring CI to pass before merging.
+**Pitfalls to remember:** YAML needs spaces, not tabs; secrets go in GitHub repo Settings,
+never in the workflow file; Vite env vars still must be set on the Vercel project.
 
 ### Phase 8 (optional/stretch)
 - Profile stats, UI polish pass, basic tests (pick 1-2, not all, depending on time left).
